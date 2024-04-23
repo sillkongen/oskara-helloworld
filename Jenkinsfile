@@ -12,8 +12,8 @@ pipeline {
                 script {
                     // Checking out the code and capturing the commit hash
                     def scmVars = git branch: 'main', url: "${env.GIT_REPO}"
-                    // Defining GIT_COMMIT as an environment variable
-                    env.GIT_COMMIT = scmVars.GIT_COMMIT
+                    // Defining GIT_COMMIT as an environment variable, sanitizing to only keep alphanumeric and replacing uppercase with lowercase
+                    env.GIT_COMMIT = scmVars.GIT_COMMIT.take(7).toLowerCase().findAll(/[a-z0-9]/).join('')
                 }
             }
         }
@@ -22,7 +22,7 @@ pipeline {
             steps {
                 script {
                     // Build a Docker image from the Dockerfile in the root directory of the repository
-                    // Optionally tagging it with the Git commit hash
+                    // Tagging it with the sanitized Git commit hash
                     docker.build("${env.DOCKER_IMAGE}:${env.GIT_COMMIT}")
                 }
             }
