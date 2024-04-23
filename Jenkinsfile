@@ -2,17 +2,19 @@ pipeline {
     agent any
 
     environment {
-        // Define the Docker image name and tag
         DOCKER_IMAGE = 'oskara-helloworld:latest'
-        // GitHub repository URL
         GIT_REPO = 'https://github.com/sillkongen/oskara-helloworld.git'
     }
 
     stages {
         stage('Checkout Code') {
             steps {
-                // Check out the latest code from the specified GitHub repository
-                git GIT_REPO
+                script {
+                    // Checking out the code and capturing the commit hash
+                    def scmVars = git branch: 'main', url: "${env.GIT_REPO}"
+                    // Defining GIT_COMMIT as an environment variable
+                    env.GIT_COMMIT = scmVars.GIT_COMMIT
+                }
             }
         }
 
@@ -20,7 +22,8 @@ pipeline {
             steps {
                 script {
                     // Build a Docker image from the Dockerfile in the root directory of the repository
-                    docker.build("${env.DOCKER_IMAGE}")
+                    // Optionally tagging it with the Git commit hash
+                    docker.build("${env.DOCKER_IMAGE}:${env.GIT_COMMIT}")
                 }
             }
         }
