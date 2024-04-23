@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = 'oskara-helloworld:latest'
+        DOCKER_IMAGE = 'oskara-helloworld'
         GIT_REPO = 'https://github.com/sillkongen/oskara-helloworld.git'
     }
 
@@ -12,8 +12,9 @@ pipeline {
                 script {
                     // Checking out the code and capturing the commit hash
                     def scmVars = git branch: 'main', url: "${env.GIT_REPO}"
-                    // Defining GIT_COMMIT as an environment variable, sanitizing to only keep alphanumeric and replacing uppercase with lowercase
+                    // Sanitizing GIT_COMMIT to ensure it's a valid Docker tag part
                     env.GIT_COMMIT = scmVars.GIT_COMMIT.take(7).toLowerCase().findAll(/[a-z0-9]/).join('')
+                    echo "Sanitized GIT_COMMIT: ${env.GIT_COMMIT}" // Logging for debugging
                 }
             }
         }
@@ -23,7 +24,9 @@ pipeline {
                 script {
                     // Build a Docker image from the Dockerfile in the root directory of the repository
                     // Tagging it with the sanitized Git commit hash
-                    docker.build("${env.DOCKER_IMAGE}:${env.GIT_COMMIT}")
+                    def dockerTag = "${env.DOCKER_IMAGE}:${env.GIT_COMMIT}"
+                    echo "Building Docker image with tag: ${dockerTag}" // Logging for debugging
+                    docker.build(dockerTag)
                 }
             }
         }
